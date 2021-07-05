@@ -15,4 +15,4 @@ the API TOKEN of telegram, in the "api" variable.
 
 # this class is ready to use?
 
-this lib is ready for small use, is W.I.P. and fastly updated.
+this class is ready for small use, is W.I.P. and fastly updated.
