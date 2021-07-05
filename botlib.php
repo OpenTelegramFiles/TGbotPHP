@@ -35,19 +35,17 @@ $this->callbackquery_from_firstname =  $update['callback_query']['from']['first_
 
     if ($this->debug) {
         if ($this->callback_query_data == "nokeyboard") {
-            $param = array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of 'keyboard' in the input array in the method for making simple commands with botlibby @tgceo and @opentelegramfiles.");
 
-            return json_encode($this->send("editMessageText", $param));
+           $this->send("editMessageText", array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of 'keyboard' in the input array in the method for making simple commands with botlibby @tgceo and @opentelegramfiles."));
         } elseif ($this->callback_query_data == "novalidkeyboard") {
-            $param = array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of a VALID 'keyboard' in the input array in the method for making simple commands with botlib by @tgceo and @opentelegramfiles.\n\nNB:you can make keyboards with simple methods.. read the wiki/readme.");
+           $this->send("editMessageText", array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of a VALID 'keyboard' in the input array in the method for making simple commands with botlib by @tgceo and @opentelegramfiles.\n\nNB:you can make keyboards with simple methods.. read the wiki/readme."));
 
-            return json_encode($this->send("editMessageText", $param));
         }
 
 }
 
         if (isset($this->callback_query_id)) {//auto respond to callback query
-            $this->send("answerCallbackQuery",["callback_query_id"=>$this->callback_query_id]);
+            $this->send("answerCallbackQuery",array("callback_query_id"=>$this->callback_query_id));
         }
 
     }
@@ -93,15 +91,13 @@ $this->callbackquery_from_firstname =  $update['callback_query']['from']['first_
 
 
                 }
-                $param = array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => $text,"parse_mode"=>$parse,'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard));
 
-                $this->send("editMessageText", $param);
+                $this->send("editMessageText", array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => $text,"parse_mode"=>$parse,'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
 
             }
             else{
-                $param = array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => $output,"parse_mode"=>$parse);
 
-                $this->send("editMessageText", $param);
+                $this->send("editMessageText",  array("message_id" => $this->callbackquery_message_id, 'chat_id' => $this->callback_query_from_user_chat_id, 'text' => $output,"parse_mode"=>$parse));
 
             }
         }
@@ -136,23 +132,23 @@ $this->callbackquery_from_firstname =  $update['callback_query']['from']['first_
                             } elseif ($value == "markdown") {
                                 $parse = "markdown";
                             } else {
-                                $value = "html";
+                                $parse = "html";
                             }
                         } elseif ($typecmd == "keyboard") {
                             $keyboard = $value;
 
                         } elseif (($typecmd != "start" && $typecmd != "keyboard") && ($typecmd != "parse_mode" && $this->debug)) {
-                            $keyboard = [
-                                'inline_keyboard' => [[["text" => "you need to ask?", "callback_data" => "needtoask"]]]];
+                            $keyboard = array( 'inline_keyboard' => array(array(array("text" => "you need to ask?", "callback_data" => "needtoask"))));
+
                         }
 
 
                     }
-                    $param = array('chat_id' => $this->message_from_user_chat_id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard));
-                    return json_encode($this->send("sendMessage", $param));
+
+                   $this->send("sendMessage", array('chat_id' => $this->message_from_user_chat_id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
                 } else {
-                    $param = array('chat_id' => $this->message_from_user_chat_id, 'text' => $output, "parse_mode" => $parse);
-                    return json_encode($this->send("sendMessage", $param));
+
+                 $this->send("sendMessage", array('chat_id' => $this->message_from_user_chat_id, 'text' => $output, "parse_mode" => $parse));
                 }
             }
 
@@ -160,25 +156,23 @@ $this->callbackquery_from_firstname =  $update['callback_query']['from']['first_
         }
 
     function build_keyboard_of_links($associativearrayoflinks){
-        $urlkeyb = [];
+        $urlkeyb = array();
         foreach ($associativearrayoflinks as $Urlbtn_text=>$value){
-            $urlkeyb = array_merge($urlkeyb, [["text"=>$Urlbtn_text, "callback_data"=>$value]]);
+            $urlkeyb = array_merge($urlkeyb, array(array("text"=>$Urlbtn_text, "callback_data"=>$value)));
         }
-        $keyboard = [
-            'inline_keyboard' => [$urlkeyb]];
-        return $keyboard;
+
+        return array('inline_keyboard' => array($urlkeyb));
     }
     function merge_keyboards($keyboard1, $keyboard2){
         return array_merge($keyboard1, $keyboard2);
     }
     function build_keyboard_of_inline($associativearrayofinline){
-        $inline = [];
+        $inline = array();
         foreach ($associativearrayofinline as $Inlinebtn_text=>$value){
-           $inline = array_merge($inline, [["text"=>$Inlinebtn_text, "callback_data"=>$value]]);
+           $inline = array_merge($inline, array(array("text"=>$Inlinebtn_text, "callback_data"=>$value)));
         }
-        $keyboard = [
-            'inline_keyboard' => [$inline]];
-        return $keyboard;
+
+        return array('inline_keyboard' => array($inline));
     }
   function send($method, $data) {
       $url = "https://api.telegram.org/bot".$this->token. "/" . $method; if (!$curld = curl_init()) { echo "exit"; exit; } curl_setopt($curld, CURLOPT_POST, true); curl_setopt($curld, CURLOPT_POSTFIELDS, $data); curl_setopt($curld, CURLOPT_URL, $url); curl_setopt($curld, CURLOPT_RETURNTRANSFER, true); $output = curl_exec($curld); curl_close($curld); echo json_encode($output); return $output; }
