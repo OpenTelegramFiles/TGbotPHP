@@ -45,16 +45,12 @@ $this->callbackquery_from_firstname =  $update['callback_query']['from']['first_
         }
 
 }
-   $this->auto_answer();
+
+        if (isset($this->callback_query_id)) {//auto respond to callback query
+            $this->send("answerCallbackQuery",["callback_query_id"=>$this->callback_query_id]);
+        }
 
     }
-function auto_answer(){
-    if (isset($update['callback_query'])) {//auto respond to callback query
-        $callback_id = $update['callback_query']['id'];
-        file_get_contents("https://api.telegram.org/bot" . $this->token . "/answerCallbackQuery?callback_query_id=$callback_id&text=SUCCESS");
-
-    }
-}
     function simple_callback_response($input, $output){
         $parse = "html";
         $text = "text";
