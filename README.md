@@ -12,3 +12,7 @@ for using the example.
 # the best practice
 is setup the webhook passing in the GET parameter
 the API TOKEN of telegram, in the "api" variable.
+
+# this lib is ready to use?
+
+this lib is ready for small use, is W.I.P. and fastly updated.
