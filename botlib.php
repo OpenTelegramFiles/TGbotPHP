@@ -253,7 +253,7 @@ class botTG{
     function build_keyboard_of_links($associativearrayoflinks){
         $urlkeyb = array();
         foreach ($associativearrayoflinks as $Urlbtn_text=>$value){
-            $urlkeyb = array_merge($urlkeyb, array(array("text"=>$Urlbtn_text, "callback_data"=>$value)));
+            $urlkeyb = array_merge($urlkeyb, array(array("text"=>$Urlbtn_text, "url"=>$value)));
         }
         return array('inline_keyboard' => array($urlkeyb));
     }
