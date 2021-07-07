@@ -17,9 +17,10 @@ class botTG{
             $this->send("answerCallbackQuery",array("callback_query_id"=>$this->update->callback_query->id));
         }
     }
-    function simple_callback_response($input, $output){
+    function simple_callback_response($input, $output, $edit = true){
         $parse = "html";
         $text = "text";
+        $photo = null;
         $keyboard = [
             'inline_keyboard' => [ [["text"=>"no keyboard", "callback_data"=>"nokeyboard"]]]];
         if($input == $this->update->callback_query->data){
@@ -42,25 +43,54 @@ class botTG{
                         } else {
                             $parse = "html";
                         }
+                    }elseif($typecmd == "photo"){
+                        $photo = $value;
+
                     }elseif ($typecmd == "keyboard") {
                                 $keyboard = $value;
-                        }elseif(($typecmd != "start" && $typecmd != "keyboard" )&&($typecmd != "parse_mode" &&  $this->debug) ){
-                        $keyboard = [
-                            'inline_keyboard' => [ [["text"=>"you need to ask?", "callback_data"=>"needtoask"]]]];}
+                        }
                 }
-                if(isset($this->update->callback_query->message->photo)){
+                if($edit){
+                    if(isset($this->update->callback_query->message->photo)){
+                        if($photo != null){
+                            $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$photo, "caption"=>$text)),"reply_markup" => json_encode($keyboard)));
+                        }else{
+                            $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$this->update->callback_query->message->photo[1]->file_id, "caption"=>$text)),"reply_markup" => json_encode($keyboard)));
+                        }
 
+                    }else{
+                        $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $text,"parse_mode"=>$parse,'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
 
-                 $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$this->update->callback_query->message->photo[1]->file_id, "caption"=>$text)),"reply_markup" => json_encode($keyboard)));
-
+                    }
                 }else{
-                    $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $text,"parse_mode"=>$parse,'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+
+                        if($photo != null){
+                            $this->send("sendPhoto", array('chat_id' =>$this->update->callback_query->message->chat->id, 'photo'     => new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+
+                        }else{
+                            $this->send("sendMessage", array('chat_id' =>$this->update->callback_query->message->chat->id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+
+                        }
+
 
                 }
+
                        }
             else{
-                $this->send("editMessageText",  array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $output,"parse_mode"=>$parse));
+                $output = str_replace("{{message text}}", $this->update->callback_query->data, $output);
+                $output= str_replace("{{message from first_name}}", $this->update->callback_query->from->first_name, $output);
+                if($edit){
 
+                    if(isset($this->update->callback_query->message->photo)){
+                        $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$this->update->callback_query->message->photo[1]->file_id, "caption"=>$output)),"reply_markup" => json_encode($keyboard)));
+                    }else{
+                        $this->send("editMessageText",  array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $output,"parse_mode"=>$parse));
+                    }
+                }else{
+
+                        $this->send("sendMessage", array('chat_id' => $this->update->message->chat->id, 'text' => $output, "parse_mode" => $parse));
+
+                }
 
                   }
         }
@@ -103,20 +133,64 @@ class botTG{
                         }
                     }
                     if($photo != null){
-                        $this->send("sendPhoto", array('chat_id' =>$this->update->message->chat->id, 'photo'     => new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+                        $this->send("sendPhoto", array('chat_id' =>$this->update->message->chat->id, 'photo'=> new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
 
                     }else{
                         $this->send("sendMessage", array('chat_id' =>$this->update->message->chat->id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
 
                     }
                      } else {
-                    if($photo != null){
-                        $this->send("sendPhoto", array('chat_id' =>$this->update->message->chat->id, 'photo'     => new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse));
 
-                    }else {
                         $this->send("sendMessage", array('chat_id' => $this->update->message->chat->id, 'text' => $output, "parse_mode" => $parse));
-                    } }
+                    }
             }
+        }
+        function send_message($chat_id, $arguments){
+            $parse = "html";
+            $photo = null;
+            $keyboard = [
+                'inline_keyboard' => [[["text" => "no keyboard", "callback_data" => "nokeyboard"]]]];
+            $text = "text";
+            if (is_array($arguments)) {
+                foreach ($arguments as $typecmd => $value) {//not simple text
+                    if ($typecmd == "text") {
+                        if (is_array($value)) {
+                            $text = "you have immited a keyboard or array. not text.";
+                        } else {
+                            $text = $value;
+                            $text = str_replace("{{message text}}",$chat_id, $text);
+                            $text = str_replace("{{message from first_name}}", $chat_id, $text);
+                        }
+                    } elseif ($typecmd == "parse_mode") {
+                        if ($value == "html") {
+                            $parse = "html";
+                        } elseif ($value == "markdown") {
+                            $parse = "markdown";
+                        } else {
+                            $parse = "html";
+                        }
+                    }elseif($typecmd == "photo"){
+                        $photo = $value;
+
+                    } elseif ($typecmd == "keyboard") {
+                        $keyboard = $value;
+                    } elseif (($typecmd != "start" && $typecmd != "keyboard") && ($typecmd != "parse_mode" && $this->debug)) {
+                        $keyboard = array( 'inline_keyboard' => array(array(array("text" => "you need to ask?", "callback_data" => "needtoask"))));
+                    }
+                }
+                if($photo != null){
+                    $this->send("sendPhoto", array('chat_id' =>$chat_id, 'photo'=> new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+
+                }else{
+                    $this->send("sendMessage", array('chat_id' =>$chat_id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+
+                }
+            } else {
+                $arguments = str_replace("{{message text}}",$chat_id, $arguments);
+                $arguments = str_replace("{{message from first_name}}", $chat_id, $arguments);
+
+                $this->send("sendMessage", array('chat_id' => $chat_id, 'text' => $arguments, "parse_mode" => $parse));
+                 }
         }
     function build_keyboard_of_links($associativearrayoflinks){
         $urlkeyb = array();
@@ -125,8 +199,8 @@ class botTG{
         }
         return array('inline_keyboard' => array($urlkeyb));
     }
-    function merge_keyboards($keyboard1, $keyboard2){
-        return array_merge($keyboard1, $keyboard2);
+    function merge_keyboards($keyboard1_first_up, $keyboard2_last_down){
+        return array_merge_recursive($keyboard1_first_up, $keyboard2_last_down);
     }
     function build_keyboard_of_inline($associativearrayofinline){
         $inline = array();
