@@ -17,6 +17,28 @@ class botTG{
             $this->send("answerCallbackQuery",array("callback_query_id"=>$this->update->callback_query->id));
         }
     }
+
+    function forward_message($chat_id, $message_id, $another_chat_id){
+            $this->send("forwardMessage",array("chat_id" => $chat_id,
+                                               "from_chat_id" => $another_chat_id,
+                                               "message_id"=> $message_id));
+
+    }
+    function forward_message_from_reply($chat_id,$FromBot = false){
+        if($FromBot){
+            if(isset($this->update->message->photo)){
+                $this->send_message($chat_id, ["text"=>$this->update->message->text,"photo"=>$this->update->message->photo[1]->file_id]);
+
+            }else{
+                $this->send_message($chat_id, ["text"=>$this->update->message->text]);
+
+            }}else{
+            $this->send("forwardMessage",array("chat_id" => $chat_id,
+                                        "from_chat_id" => $this->update->message->reply_to_message->forward_from->id,
+                                        "message_id"=> $this->update->message->reply_to_message->id));
+        }
+
+    }
     function simple_callback_response($input, $output, $edit = true){
         $parse = "html";
         $text = "text";
@@ -95,6 +117,33 @@ class botTG{
                   }
         }
     }
+    function get_chat_id(){
+        if(isset($this->update->callback_query->message->chat->id)){
+            return $this->update->callback_query->message->chat->id;
+        }elseif (isset($this->update->message->chat->id)){
+            return $this->update->message->chat->id;
+        }else{
+            return null;
+        }
+    }
+    function check_text_message($messagetocheck){
+        if(empty($this->update->message->text)){
+            return false;
+        }
+        if($messagetocheck == $this->update->message->text){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    function check_callbackquery_data($CallbackQuerydatatocheck){
+        if (empty($this->update->update->callback_query->data)){return false;}
+        if($CallbackQuerydatatocheck == $this->update->update->callback_query->data){
+            return true;
+        }else{
+            return false;
+        }
+    }
     function command_simple($input, $output){
 
             $input = str_replace("{{message text}}", $this->update->message->text, $input);
@@ -148,8 +197,7 @@ class botTG{
         function send_message($chat_id, $arguments){
             $parse = "html";
             $photo = null;
-            $keyboard = [
-                'inline_keyboard' => [[["text" => "no keyboard", "callback_data" => "nokeyboard"]]]];
+            $keyboard = null;
             $text = "text";
             if (is_array($arguments)) {
                 foreach ($arguments as $typecmd => $value) {//not simple text
@@ -179,10 +227,20 @@ class botTG{
                     }
                 }
                 if($photo != null){
-                    $this->send("sendPhoto", array('chat_id' =>$chat_id, 'photo'=> new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+                    if($keyboard != null){
+                        $this->send("sendPhoto", array('chat_id' =>$chat_id, 'photo'=> new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+                    }else{
+                        $this->send("sendPhoto", array('chat_id' =>$chat_id, 'photo'=> new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse));
+                    }
 
                 }else{
-                    $this->send("sendMessage", array('chat_id' =>$chat_id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+                    if ($keyboard != null){
+                        $this->send("sendMessage", array('chat_id' =>$chat_id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+
+                    }else{
+                        $this->send("sendMessage", array('chat_id' =>$chat_id, 'text' => $text, "parse_mode" => $parse));
+
+                    }
 
                 }
             } else {
@@ -201,6 +259,20 @@ class botTG{
     }
     function merge_keyboards($keyboard1_first_up, $keyboard2_last_down){
         return array_merge_recursive($keyboard1_first_up, $keyboard2_last_down);
+    }
+    function merge_multiple_keyboards($keyboards){
+        $i = 0;
+        $keyboard_complete = null;
+        foreach ($keyboards as $keyboard){
+            if ($i >0){
+$keyboard_complete =array_merge_recursive($keyboard_complete, $keyboard);
+            }else{
+                $i++;
+                $keyboard_complete = $keyboard;
+            }
+
+        }
+        return $keyboard_complete;
     }
     function build_keyboard_of_inline($associativearrayofinline){
         $inline = array();
