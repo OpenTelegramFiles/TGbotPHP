@@ -201,8 +201,8 @@ return null;
                             $text = "you have immited a keyboard or array. not text.";
                         } else {
                             $text = $value;
-                            $text = str_replace("{{message text}}",$chat_id, $text);
-                            $text = str_replace("{{message from first_name}}", $chat_id, $text);
+                            $text = str_replace("{{message text}}",$this->update->message->text, $text);
+                            $text = str_replace("{{message from first_name}}",  $this->update->message->from->first_name, $text);
                         }
                     } elseif ($typecmd == "parse_mode") {
                         if ($value == "html") {
@@ -239,8 +239,9 @@ return null;
 
                 }
             } else {
-                $arguments = str_replace("{{message text}}",$chat_id, $arguments);
-                $arguments = str_replace("{{message from first_name}}", $chat_id, $arguments);
+             
+                $arguments = str_replace("{{message text}}",$this->update->message->text, $arguments);
+                $arguments = str_replace("{{message from first_name}}", $this->update->message->from->first_name, $arguments);
 
                 $this->send("sendMessage", array('chat_id' => $chat_id, 'text' => $arguments, "parse_mode" => $parse));
                  }
