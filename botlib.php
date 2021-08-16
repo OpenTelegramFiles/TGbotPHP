@@ -117,11 +117,44 @@ class botTG{
                   }
         }
     }
+    function is_private(){
+        if($this->update->message->chat->type == "private"){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    function get_message_id(){
+
+            if(isset($this->update->message->id)){
+
+                return $this->update->message->id;
+            }else{
+                return null;
+            }
+
+    }
     function get_chat_id(){
         if(isset($this->update->callback_query->message->chat->id)){
             return $this->update->callback_query->message->chat->id;
         }elseif (isset($this->update->message->chat->id)){
             return $this->update->message->chat->id;
+        }else{
+            return null;
+        }
+    }
+    function get_text_message(){
+        if(isset($this->update->message->text)){
+
+            return $this->update->message->text;
+        }else{
+return null;
+        }
+    }
+    function get_data(){
+        if(isset($this->update->update->callback_query->data)){
+
+            return $this->update->update->callback_query->data;
         }else{
             return null;
         }
@@ -137,62 +170,24 @@ class botTG{
         }
     }
     function check_callbackquery_data($CallbackQuerydatatocheck){
-        if (empty($this->update->update->callback_query->data)){return false;}
-        if($CallbackQuerydatatocheck == $this->update->update->callback_query->data){
+        if (empty($this->update->callback_query->data)){return false;}
+        if($CallbackQuerydatatocheck == $this->update->callback_query->data){
             return true;
         }else{
             return false;
         }
     }
-    function command_simple($input, $output){
+    function command_simple($input, $output, $modify_input = true){
+            if($modify_input){
 
-            $input = str_replace("{{message text}}", $this->update->message->text, $input);
-            $input = str_replace("{{message from first_name}}", $this->update->message->from->first_name, $input);
-            $parse = "html";
-        $photo = null;
-            $keyboard = [
-                'inline_keyboard' => [[["text" => "no keyboard", "callback_data" => "nokeyboard"]]]];
-            $text = "text";
-            if ($input == $this->update->message->text) {
-                if (is_array($output)) {
-                    foreach ($output as $typecmd => $value) {//not simple text
-                        if ($typecmd == "text") {
-                            if (is_array($value)) {
-                                $text = "you have immited a keyboard or array. not text.";
-                            } else {
-                                   $text = $value;
-                                $text = str_replace("{{message text}}", $this->update->message->text, $text);
-                                $text = str_replace("{{message from first_name}}", $this->update->message->from->first_name, $text);
-                            }
-                        } elseif ($typecmd == "parse_mode") {
-                            if ($value == "html") {
-                                $parse = "html";
-                            } elseif ($value == "markdown") {
-                                $parse = "markdown";
-                            } else {
-                                $parse = "html";
-                            }
-                        }elseif($typecmd == "photo"){
-                            $photo = $value;
-
-                        } elseif ($typecmd == "keyboard") {
-                            $keyboard = $value;
-                        } elseif (($typecmd != "start" && $typecmd != "keyboard") && ($typecmd != "parse_mode" && $this->debug)) {
-                            $keyboard = array( 'inline_keyboard' => array(array(array("text" => "you need to ask?", "callback_data" => "needtoask"))));
-                        }
-                    }
-                    if($photo != null){
-                        $this->send("sendPhoto", array('chat_id' =>$this->update->message->chat->id, 'photo'=> new CURLFile(realpath($photo)),'caption' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
-
-                    }else{
-                        $this->send("sendMessage", array('chat_id' =>$this->update->message->chat->id, 'text' => $text, "parse_mode" => $parse, 'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
-
-                    }
-                     } else {
-
-                        $this->send("sendMessage", array('chat_id' => $this->update->message->chat->id, 'text' => $output, "parse_mode" => $parse));
-                    }
+                $input = str_replace("{{message text}}", $this->update->message->text, $input);
+                $input = str_replace("{{message from first_name}}", $this->update->message->from->first_name, $input);
             }
+            if($input == $this->update->message->text){
+                $this->send_message($this->update->message->chat->id, $output);
+            }
+
+
         }
         function send_message($chat_id, $arguments){
             $parse = "html";
