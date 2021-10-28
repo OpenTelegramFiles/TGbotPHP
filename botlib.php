@@ -2,21 +2,25 @@
 class botTG{
     public $update;
     protected $token, $debug;
-    function __construct($token,$updates, $debug = false){
+    function __construct($token,$updates= false, $debug = false){
     $this->token = $token;
     $this->debug = $debug;
+    if ($updates!=false){
         $this->update = json_decode($updates);
-    if ($this->debug) {
-        if ($this->update->callback_query->data == "nokeyboard") {
-           $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of 'keyboard' in the input array in the method for making simple commands with botlibby @tgceo and @opentelegramfiles."));
-        } elseif ($this->update->callback_query->data == "novalidkeyboard") {
-           $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of a VALID 'keyboard' in the input array in the method for making simple commands with botlib by @tgceo and @opentelegramfiles.\n\nNB:you can make keyboards with simple methods.. read the wiki/readme."));
+        if ($this->debug) {
+            if ($this->update->callback_query->data == "nokeyboard") {
+                $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of 'keyboard' in the input array in the method for making simple commands with botlibby @tgceo and @opentelegramfiles."));
+            } elseif ($this->update->callback_query->data == "novalidkeyboard") {
+                $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => "📕 why this error?\n\nthis error is causated by no passed value of a VALID 'keyboard' in the input array in the method for making simple commands with botlib by @tgceo and @opentelegramfiles.\n\nNB:you can make keyboards with simple methods.. read the wiki/readme."));
+            }
         }
-}
         if (isset($this->update->callback_query->id)) {//auto respond to callback query
             $this->send("answerCallbackQuery",array("callback_query_id"=>$this->update->callback_query->id));
         }
     }
+    }
+
+
 
     function forward_message($chat_id, $message_id, $another_chat_id){
             $this->send("forwardMessage",array("chat_id" => $chat_id,
@@ -81,7 +85,7 @@ class botTG{
                         }
 
                     }else{
-                        $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $text,"parse_mode"=>$parse,'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+                       return $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $text,"parse_mode"=>$parse,'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
 
                     }
                 }else{
@@ -118,7 +122,7 @@ class botTG{
         }
     }
     function is_private(){
-        if($this->update->message->chat->type == "private"){
+        if($this->update->message->chat->type == "private" or $this->update->callback_query->message->chat->type == "private"){
             return true;
         }else{
             return false;
@@ -152,9 +156,9 @@ return null;
         }
     }
     function get_data(){
-        if(isset($this->update->update->callback_query->data)){
+        if(isset($this->update->callback_query->data)){
 
-            return $this->update->update->callback_query->data;
+            return $this->update->callback_query->data;
         }else{
             return null;
         }
@@ -176,6 +180,84 @@ return null;
         }else{
             return false;
         }
+    }
+    function edit_message( $output, $edit = true){
+        $parse = "html";
+        $text = "text";
+        $photo = null;
+        $keyboard = null;
+        if(is_array($output)){
+            foreach ($output as $typecmd=>$value) {//not simple text
+                if ($typecmd == "text") {
+                    if (is_array($value)) {
+                        $text = "you have entered a keyboard or array. not text.";
+                    } else {
+                        $text = $value;
+                        $text = str_replace("{{message text}}", $this->update->callback_query->data, $text);
+                        $text = str_replace("{{message from first_name}}", $this->update->callback_query->from->first_name, $text);
+                    }
+
+                } elseif ($typecmd == "parse_mode") {
+                    if ($value == "html") {
+                        $parse = "html";
+                    } elseif ($value == "markdown") {
+                        $parse = "markdown";
+                    } else {
+                        $parse = "html";
+                    }
+                }elseif($typecmd == "photo"){
+                    $photo = $value;
+
+                }elseif ($typecmd == "keyboard") {
+                    $keyboard = $value;
+                }
+            }
+
+                if(isset($this->update->callback_query->message->photo)){
+                    if($photo != null){
+                        if($keyboard != null){
+                            $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$photo, "caption"=>$text)),"reply_markup" => json_encode($keyboard)));
+
+                        }else{
+                            $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$photo, "caption"=>$text))));
+
+                        }
+                         }else{
+                        if ($keyboard != null){
+                            $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$this->update->callback_query->message->photo[1]->file_id, "caption"=>$text)),"reply_markup" => json_encode($keyboard)));
+
+                        }else{
+                            $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$this->update->callback_query->message->photo[1]->file_id, "caption"=>$text))));
+
+                        }
+                         }
+
+                }else{
+                    if ($keyboard != null){
+                        $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $text,"parse_mode"=>$parse,'resize_keyboard' => "true", "reply_markup" => json_encode($keyboard)));
+
+                    }else{
+                        $this->send("editMessageText", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $text,"parse_mode"=>$parse));
+                    }
+
+                }
+
+
+        }
+        else{
+            $output = str_replace("{{message text}}", $this->update->callback_query->data, $output);
+            $output= str_replace("{{message from first_name}}", $this->update->callback_query->from->first_name, $output);
+
+
+                if(isset($this->update->callback_query->message->photo)){
+                    $this->send("editMessageMedia", array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, "media"=>json_encode(array("type"=>"photo", "media"=>$this->update->callback_query->message->photo[1]->file_id, "caption"=>$output)),"reply_markup" => json_encode($keyboard)));
+                }else{
+                    $this->send("editMessageText",  array("message_id" => $this->update->callback_query->message->message_id, 'chat_id' => $this->update->callback_query->message->chat->id, 'text' => $output,"parse_mode"=>$parse));
+                }
+
+
+        }
+
     }
     function command_simple($input, $output, $modify_input = true){
             if($modify_input){
@@ -239,7 +321,7 @@ return null;
 
                 }
             } else {
-             
+
                 $arguments = str_replace("{{message text}}",$this->update->message->text, $arguments);
                 $arguments = str_replace("{{message from first_name}}", $this->update->message->from->first_name, $arguments);
 
@@ -278,5 +360,5 @@ $keyboard_complete =array_merge_recursive($keyboard_complete, $keyboard);
         return array('inline_keyboard' => array($inline));
     }
   function send($method, $data) {
-      $url = "https://api.telegram.org/bot".$this->token. "/" . $method; if (!$curld = curl_init()) { echo "exit"; exit; } curl_setopt($curld, CURLOPT_POST, true); curl_setopt($curld, CURLOPT_POSTFIELDS, $data); curl_setopt($curld, CURLOPT_URL, $url); curl_setopt($curld, CURLOPT_RETURNTRANSFER, true); $output = curl_exec($curld); curl_close($curld); echo json_encode($output); return $output; }
+      $url = "https://api.telegram.org/bot".$this->token. "/" . $method; if (!$curld = curl_init()) {exit; } curl_setopt($curld, CURLOPT_POST, true); curl_setopt($curld, CURLOPT_POSTFIELDS, $data); curl_setopt($curld, CURLOPT_URL, $url); curl_setopt($curld, CURLOPT_RETURNTRANSFER, true); $output = curl_exec($curld); curl_close($curld); return $output; }
 }
