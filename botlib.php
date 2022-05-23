@@ -2,7 +2,7 @@
 class botTG{
     public $update;
     protected $token, $debug;
-    function __construct($token,$updates= false, $debug = false){
+    function __construct($token,$updates= false, $debug = false, $debugFile = false){
     $this->token = $token;
     $this->debug = $debug;
     if ($updates!=false){
@@ -391,5 +391,20 @@ $keyboard_complete =array_merge_recursive($keyboard_complete, $keyboard);
         return array('inline_keyboard' => array($inline));
     }
   function send($method, $data) {
-      $url = "https://api.telegram.org/bot".$this->token. "/" . $method; if (!$curld = curl_init()) {exit; } curl_setopt($curld, CURLOPT_POST, true); curl_setopt($curld, CURLOPT_POSTFIELDS, $data); curl_setopt($curld, CURLOPT_URL, $url); curl_setopt($curld, CURLOPT_RETURNTRANSFER, true); $output = curl_exec($curld); curl_close($curld); return $output; }
+      $url = "https://api.telegram.org/bot".$this->token. "/" . $method; if (!$curld = curl_init()) {exit; } curl_setopt($curld, CURLOPT_POST, true); curl_setopt($curld, CURLOPT_POSTFIELDS, $data); curl_setopt($curld, CURLOPT_URL, $url); curl_setopt($curld, CURLOPT_RETURNTRANSFER, true); $output = curl_exec($curld); curl_close($curld);
+        if($this->debug){
+            $err = json_decode($output, true);
+            if ($err["ok"] == false){
+                if($this->debugFile){$fil = fopen("errors.txt", "a+");
+                    fwrite($fil, $err["description"]);
+                    fclose($err);
+
+                }
+                else{
+                    $this->send_message($this->get_chat_id(), $err["description"]);
+                }
+
+            }
+        }
+        return $output; }
 }
