@@ -21,7 +21,38 @@ class botTG{
     }
 
 
+    static function checkIp(string $ip)
+    {
+        $ranges = [
+            [
+                'address' => '149.154.160.0',
+                'netmask' => '20',
+                'netmask_decimal' => -4096,
+                'integer_id' => '2509938688',
+            ],
+            [
+                'address' => '91.108.4.0',
+                'netmask' => '22',
+                'netmask_decimal' => -1024,
+                'integer_id' => '1533805568',
+            ],
+        ];
 
+        $ip = trim($ip);
+        $ipDecimal = ip2long($ip);
+
+        if (($ipDecimal & $ranges[0]['netmask_decimal']) == $ranges[0]['integer_id']) {
+
+            return true;
+        }
+
+        if (($ipDecimal & $ranges[1]['netmask_decimal']) == $ranges[1]['integer_id']) {
+
+            return true;
+        }
+
+        return false;
+    }
     function forward_message($chat_id, $message_id, $another_chat_id){
             $this->send("forwardMessage",array("chat_id" => $chat_id,
                                                "from_chat_id" => $another_chat_id,
